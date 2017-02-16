@@ -1,13 +1,19 @@
 #!/bin/env python3
 # -*- coding: utf8 -*-
+import sys
+from pyregex import evaluar
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QCheckBox,
+							QDesktopWidget, QLineEdit, QMessageBox,
+							QHBoxLayout, QVBoxLayout, QWidget, QPlainTextEdit, QMenuBar)
+"""
+El siguiente programa usa el framework Qt5 para construir la interfaz grafica de usuario (frontend)
+para el la función 'evaluar' del modulo pyregex (tambien escrito por mi)
+"""
 
 """
-El siguiente programa usa el framework Qt5 para construir la interfaz grafica de usuario y la clase re
-de libreria estandar de modulos de python 3 para evaluar las expresiones regulares.
-El 'motor' del programa se encuentra contenido en el metodo evaluar
-"""
+qpyregex.py
 
-"""
 Copyright 2017 Angel Leon <luianglenlop@gmail.com>
 
 This program is free software; you can redistribute it and/or modify
@@ -25,13 +31,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
 """
-
-import sys
-import re
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QCheckBox,
-							QDesktopWidget, QLineEdit, QMessageBox,
-							QHBoxLayout, QVBoxLayout, QWidget, QPlainTextEdit, QMenuBar)
 
 
 class Gui(QWidget):
@@ -75,33 +74,18 @@ class Gui(QWidget):
 	def evaluar(self):
 		self.txt_coincidencias.pyqtConfigure(plainText='')
 		regex = self.txt_regex.text()  # Obtener expresion regular
-		texto_a_tratar = self.txt_a_tratar.toPlainText()  # Obtener del campo de texto
+		texto_entrada = self.txt_a_tratar.toPlainText()  # Obtener del campo de texto
+		texto_entrada = texto_entrada.splitlines()
 		if regex == "":  # Validar si regex es cadena nula
 			return None
-		try:  # La clase re lanza una excepción si la regex es incorrecta (parentesis que no cierran, etc)
-			motor = re.compile(regex)
-		except Exception:
-			self.txt_regex.setStyleSheet("background-color: red; color: white")  # Se indica visualmente que es
-			# incorrecta la regex y el metodo retorna
-			return None
-		texto_a_tratar = texto_a_tratar.splitlines()  # Divide texto multilinea en lineas individuales
-		resultado = []
-		for i in texto_a_tratar:  # Solicitar al objeto re las coincidencias, el objeto devuelve una lista con las
-			# coincidencias encotradas o una lista vacia
-			if self.chk_case.checkState():
-				coincidencia = motor.findall(i, re.IGNORECASE)
-			else:
-				coincidencia = motor.findall(i)
-			resultado.append(coincidencia)  # Crear una lista con todas las coincidencias de cada linea
-		if len(resultado) == 0:
-			return None
-		texto = ""
-		cont = 0
-		for i in resultado:
-			if len(i) != 0:
-				texto += texto_a_tratar[cont] + '\n'  # Crea un string con las lineas originales que coinciden
-			cont += 1
-		self.txt_coincidencias.pyqtConfigure(plainText=texto)  # Mostrar en el campo de texto los resultados
+		if self.chk_case.checkState():
+			texto_salida = evaluar(regex, texto_entrada, True)
+		else:
+			texto_salida = evaluar(regex, texto_entrada, None)
+		if texto_salida is not None:
+			self.txt_coincidencias.pyqtConfigure(plainText=texto_salida)  # Mostrar en el campo de texto los resultados
+		else:
+			self.txt_regex.setStyleSheet("background-color: red; color: white")
 
 	def centrar(self):  # Centrar la ventana respecto al escritorio
 		fg = self.frameGeometry()
@@ -121,7 +105,7 @@ class Gui(QWidget):
 		mensaje.setIconPixmap(QPixmap("panda.png"))
 		mensaje.exec_()
 
-
-app = QApplication(sys.argv)
-w = Gui()
-sys.exit(app.exec_())
+if __name__ == '__main__':
+	app = QApplication(sys.argv)
+	w = Gui()
+	sys.exit(app.exec_())
